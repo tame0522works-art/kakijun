@@ -19,6 +19,8 @@ const SHIFT = 7
 const SHAPE = 8
 const SHORT = 0.7
 const LONG = 1.4
+/** 次の画に惜しい程度に合うとき、ほかの画の距離がこの倍率より小さければ書き順違いとする */
+const ORDER_MARGIN = 0.5
 
 export interface Target {
   pts: Point[]
@@ -92,14 +94,61 @@ function compare(user: readonly Point[], userLen: number, t: Target): Compared {
   return { fwd: meanDist(user, t.pts), rev: meanDist(user, t.pts, true), issues }
 }
 
+/** 字全体の大きさの補正の範囲。これを超える差は、補正せずにずれとして伝える */
+const SCALE_MIN = 0.7
+const SCALE_MAX = 1.4
+
+/**
+ * 書き終えた画から、字全体の位置と大きさのずれを推定し、新しい線を手本の座標へ戻す関数を返す。
+ * 手本 ≈ 中心 + a ×（書いた点 − 書いた中心）を最小二乗で解く。回転は見ない（1画目が少し傾くだけで大きく効いてしまうため）。
+ * 書いた画が少ないうちは推定が当てにならないので、n 画書いたら n/(n+1) の重みでだけ補正する。
+ */
+function fitWhole(written: readonly (readonly Point[])[], targets: readonly Target[]): (p: Point) => Point {
+  const n = written.length
+  if (n === 0) return (p) => p
+  const users = written.map((w) => resample(w, N))
+  let ux = 0
+  let uy = 0
+  let tx = 0
+  let ty = 0
+  users.forEach((u, i) =>
+    u.forEach((p, j) => {
+      ux += p[0]
+      uy += p[1]
+      tx += targets[i].pts[j][0]
+      ty += targets[i].pts[j][1]
+    }),
+  )
+  const m = n * N
+  ux /= m
+  uy /= m
+  tx /= m
+  ty /= m
+  let num = 0
+  let den = 0
+  users.forEach((u, i) =>
+    u.forEach((p, j) => {
+      num += (p[0] - ux) * (targets[i].pts[j][0] - tx) + (p[1] - uy) * (targets[i].pts[j][1] - ty)
+      den += (p[0] - ux) ** 2 + (p[1] - uy) ** 2
+    }),
+  )
+  // 点1つだけ（den が 0）のときは位置だけ合わせる
+  const a = den > 0 ? Math.min(SCALE_MAX, Math.max(SCALE_MIN, num / den)) : 1
+  const w = n / (n + 1)
+  return ([x, y]) => [x + w * (tx + a * (x - ux) - x), y + w * (ty + a * (y - uy) - y)]
+}
+
 /**
  * @param drawn 書いた線の点（枠の座標）
  * @param targets prepare() の結果
  * @param index 次に書くはずの画（0 始まり）。これより前の画は書き終わっている
+ * @param written 書き終えた画の線（written[i] が i 画目）。字全体の位置と大きさの補正に使う
  */
-export function judge(drawn: readonly Point[], targets: readonly Target[], index: number): Verdict {
-  const user = resample(drawn, N)
-  const userLen = polylineLength(drawn)
+export function judge(drawn: readonly Point[], targets: readonly Target[], index: number, written: readonly (readonly Point[])[] = []): Verdict {
+  const fit = fitWhole(written, targets)
+  const placed = drawn.map(fit)
+  const user = resample(placed, N)
+  const userLen = polylineLength(placed)
   const t = targets[index]
   const cur = compare(user, userLen, t)
   // 点は向きを問わないので、近いほうの向きで測る
@@ -121,7 +170,10 @@ export function judge(drawn: readonly Point[], targets: readonly Target[], index
     }
   }
   const reversed = t.len >= DOT && cur.rev <= CLOSE && cur.rev < cur.fwd
-  if (best >= 0 && bestScore <= OK && bestScore < (reversed ? cur.rev : score)) return { kind: 'order', matched: best, score: bestScore }
+  const own = reversed ? cur.rev : score
+  // 次の画に「惜しい」程度に合っているなら、ほかの画のほうが明らかによく合うときだけ書き順違いにする。
+  // 少し位置がずれただけの1画目が、近くの似た画（林の1画目の横と、右の木の横など）と取り違えられるのを防ぐ
+  if (best >= 0 && bestScore <= OK && (own > CLOSE ? bestScore < own : bestScore < own * ORDER_MARGIN)) return { kind: 'order', matched: best, score: bestScore }
   if (reversed) return { kind: 'direction', score: cur.rev }
 
   if (score <= CLOSE) return { kind: 'ok', issues: cur.issues.length ? cur.issues : [{ kind: 'shape' }], score }

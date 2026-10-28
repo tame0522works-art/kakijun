@@ -1,3 +1,250 @@
+:root {
+  --bg: #f7f5ef;
+  --surface: #fffdf8;
+  --fg: #1f2328;
+  --muted: #5b616b;
+  --line: #d3cfc4;
+  --guide: #e6e1d5;
+  --accent: #2b3f8f;
+  --close: #9a5b00;
+  --wrong: #b42318;
+  --ok: #1a7f37;
+  color-scheme: light dark;
+  font-family: system-ui, 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191d;
+    --surface: #1e2126;
+    --fg: #e8e6e1;
+    --muted: #a3a7ae;
+    --line: #3a3d44;
+    --guide: #2c3036;
+    --accent: #9fb2ff;
+    --close: #f0b44c;
+    --wrong: #ef5350;
+    --ok: #57c27a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
   margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: var(--accent);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bar h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+  gap: 24px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.writer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.current .char {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.current .count {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-right: auto;
+}
+
+.current button {
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.pad {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  /* 書いているあいだに画面がスクロールしたり拡大したりしないようにする */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+
+.pad.loading {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+/* 2行ぶんの高さを常にとっておき、文の長さで書く欄の下が動かないようにする */
+.feedback {
+  margin: 0;
+  min-height: 3em;
+  line-height: 1.5;
+  padding-left: 10px;
+  border-left: 4px solid var(--line);
+}
+
+.feedback.ok {
+  border-color: var(--ok);
+}
+
+.feedback.close {
+  border-color: var(--close);
+}
+
+.feedback.wrong {
+  border-color: var(--wrong);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+button {
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.6;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.picker h2 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.picker ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picker button {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: 1.25rem;
+}
+
+.picker button[aria-current='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* 書き終えた字に小さな印を付ける（色だけに頼らず形でもわかるように） */
+.picker button.finished::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.foot {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 8px 16px 24px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.foot p {
+  margin: 0 0 4px;
+}
+
+@media (max-width: 760px) {
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
 }
