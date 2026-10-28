@@ -1,0 +1,11 @@
+node_modules
+dist
+*.local
+*.log
+.DS_Store
+.vscode/*
+.idea
+# KanjiVG の配布物。npm run fetch で取り直せる
+raw
+dist-e2e
+e2e-failures
