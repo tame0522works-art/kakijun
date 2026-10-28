@@ -49,6 +49,13 @@ export default function App() {
     setTally(EMPTY)
   }
 
+  /** 一覧から選んだとき。スマホでは一覧が書く欄の下にあるので、書く欄が画面から外れていれば戻す */
+  const pick = (next: string) => {
+    start(next)
+    const writer = document.querySelector('.writer')
+    if (writer && writer.getBoundingClientRect().top < 0) writer.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const onStroke = (pts: Point[]) => {
     if (done) return
     const v = judge(
@@ -73,7 +80,10 @@ export default function App() {
     }
   }
 
+  // 戻した画は合格・惜しいの数から引く（間違えた回数はそのまま残す）
   const undo = () => {
+    const kind = inks[inks.length - 1].close ? 'close' : 'ok'
+    setTally({ ...tally, [kind]: tally[kind] - 1 })
     setInks(inks.slice(0, -1))
     setFeedback(null)
     setHint(null)
@@ -128,6 +138,11 @@ export default function App() {
           </p>
 
           <div className="actions">
+            {done && (
+              <button type="button" className="primary" onClick={() => start(CHARS[(pos + 1) % CHARS.length])}>
+                次の字へ（{CHARS[(pos + 1) % CHARS.length]}）
+              </button>
+            )}
             <button type="button" onClick={() => setHint({ at: performance.now(), all: true })} disabled={!data}>
               お手本を見る
             </button>
@@ -149,7 +164,7 @@ export default function App() {
           <ul>
             {CHARS.map((c) => (
               <li key={c}>
-                <button type="button" lang="ja" aria-current={c === ch ? 'true' : undefined} className={finished.has(c) ? 'finished' : undefined} onClick={() => start(c)}>
+                <button type="button" lang="ja" aria-current={c === ch ? 'true' : undefined} className={finished.has(c) ? 'finished' : undefined} onClick={() => pick(c)}>
                   {c}
                 </button>
               </li>

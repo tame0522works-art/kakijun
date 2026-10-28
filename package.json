@@ -13,7 +13,9 @@
     "convert": "tsx tools/convert.ts",
     "check": "npm run check:data && npm run check:judge",
     "check:data": "tsx tools/check-data.ts",
-    "check:judge": "tsx tools/check-judge.ts"
+    "check:judge": "tsx tools/check-judge.ts",
+    "e2e": "vite build --outDir dist-e2e --emptyOutDir && tsx tools/e2e.ts",
+    "screenshots": "tsx tools/screenshots.ts"
   },
   "dependencies": {
     "react": "^19.3.0",

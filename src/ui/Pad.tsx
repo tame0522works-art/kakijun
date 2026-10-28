@@ -13,6 +13,7 @@ export default function Pad({ label, onStroke, ...scene }: Props) {
   const sceneRef = useRef(scene)
   sceneRef.current = scene
   const frame = useRef(0)
+  const penSeen = useRef(false)
 
   const redraw = () => {
     const el = canvas.current
@@ -65,6 +66,9 @@ export default function Pad({ label, onStroke, ...scene }: Props) {
       role="img"
       aria-label={label}
       onPointerDown={(e) => {
+        // ペンで書いたことがあれば、それ以降の指の接触は手のひらとみなして無視する（タブレットでペンを使うとき）
+        if (e.pointerType === 'pen') penSeen.current = true
+        else if (e.pointerType === 'touch' && penSeen.current) return
         // 2本目の指などは無視する（書いている途中の線を壊さない）
         if (live.current || (e.pointerType === 'mouse' && e.button !== 0)) return
         e.currentTarget.setPointerCapture(e.pointerId)

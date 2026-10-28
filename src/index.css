@@ -122,6 +122,8 @@ a {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  /* iOS で長押ししたときの画像のメニューを出さない */
+  -webkit-touch-callout: none;
   cursor: crosshair;
 }
 
@@ -166,6 +168,15 @@ button {
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
+  /* 字の一覧を続けて押したときに、ダブルタップの拡大にならないようにする */
+  touch-action: manipulation;
+}
+
+button.primary {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
 button:disabled {

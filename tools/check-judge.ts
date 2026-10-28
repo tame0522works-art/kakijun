@@ -52,7 +52,7 @@ for (const ch of GRADE1) {
   const targets = prepare(strokes)
   const raws = strokes.map((s) => flattenPath(s.d))
   const g = { dx: between(-4, 4), dy: between(-4, 4), s: between(0.92, 1.08) }
-  // 1画目は字全体の手がかりがないので、お手本から大きく外れると判定できない（0.8 倍・8 ずらしでは 1 画目の 16 字が外れた）
+  // 1画目は字全体の手がかりがないので、お手本から大きく外れると判定できない（0.8 倍・8 ずらしでは 1 画目の 12 字が外れた）
   const small = { dx: 6, dy: 6, s: 0.85 }
   const wobbled: Point[][] = []
   const smalls: Point[][] = []
